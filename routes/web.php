@@ -31,8 +31,9 @@ Route::group(['prefix' => 'user'], function () {
     Route::get('/register', 'UserController@getRegister')->name('userRegister');
     Route::post('/register', 'UserController@register')->name('postRegister');
     Route::get('/logout', 'UserController@logout')->name('userLogout');
-
     Route::match(['get', 'post'], '/profile', 'UserController@profile')->name('userProfile');
+    Route::get('/like/{id}', 'UserController@like')->name('like');
+    Route::get('/like-list', 'UserController@likeList')->name('likeList');
 });
 
 

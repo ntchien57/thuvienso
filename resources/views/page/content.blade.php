@@ -55,7 +55,7 @@
                             </a>
                             <div class="product_composer m-2"><a href="">Tác Giả: <span
                                         style="color:red">{{ $sachnoibat->tentacgia }}</a></div>
-                            <div class="rating">
+                            <div class="rating m-2">
                                 <span class="fa fa-star checked"></span>
                                 <span class="fa fa-star checked"></span>
                                 <span class="fa fa-star checked"></span>
@@ -87,7 +87,7 @@
                             </a>
                             <div class="product_composer m-2"><a href="">Tác Giả: <span
                                         style="color:red">{{ $khuyendoc->tentacgia }}</a></div>
-                            <div class="rating">
+                            <div class="rating m-2">
                                 <span class="fa fa-star checked"></span>
                                 <span class="fa fa-star checked"></span>
                                 <span class="fa fa-star checked"></span>

@@ -229,7 +229,7 @@ body {
 
 #ulmenu .child a {
 	display: block;
-	width: 220px;
+	width: 210px;
 	text-decoration: none;
 	color: black;
 	border-bottom: 1px solid #ccc;
@@ -428,6 +428,10 @@ body {
 
 #content .list_pd .product .rating .checked {
 	color: orange;
+}
+
+#content .list_pd .product .product_name {
+	color: #000;
 }
 
 #content .list_pd .product .product_name:hover {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Qltv_Docgia;
 use App\Qltv_Nganh;
 use App\Qltv_Khoa;
+use App\Like;
+use App\Qltv_Theloai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -176,5 +178,55 @@ class UserController extends Controller
 
         // Nếu GET => hiển thị form, truyền thêm $khoas, $nganhs
         return view('user.profile', compact('docgia', 'khoas', 'nganhs'));
+    }
+
+    public function like(Request $request)
+    {
+        if (!$request->session()->has('user_id')) {
+            return back()->with('error', 'Bạn cần đăng nhập để thích');
+        }
+
+        $userId = $request->session()->get('user_id');
+        $sachId = $request->id; // hoặc $request->sach_id tùy bạn truyền lên
+
+        if (!$sachId) {
+            return back()->with('error', 'Không xác định được sách');
+        }
+
+        $exists = \App\Like::where('user_id', $userId)
+            ->where('sach_id', $sachId)
+            ->first();
+
+        if ($exists) {
+            return back()->with('error', 'Sách này đã có trong danh sách yêu thích');
+        }
+
+        // Thêm vào bảng like
+        \App\Like::create([
+            'user_id' => $userId,
+            'sach_id' => $sachId
+        ]);
+
+        return back()->with('message', 'Đã thêm vào yêu thích');
+    }
+
+    public function likeList(Request $request)
+    {
+        // Kiểm tra đăng nhập
+        if (!$request->session()->has('user_id')) {
+            return redirect()->route('userLogin')
+                ->with('error', 'Vui lòng đăng nhập để xem danh sách yêu thích');
+        }
+
+        $userId = $request->session()->get('user_id');
+
+        // Join bảng sách
+        $theloai = Qltv_Theloai::paginate(12);
+        $likes = Like::where('user_id', $userId)
+            ->join('qltv_sach', 'yeuthich.sach_id', '=', 'qltv_sach.id')
+            ->select('qltv_sach.*', 'yeuthich.id as like_id')
+            ->get();
+
+        return view('user.like_list', compact('likes','theloai'));
     }
 }
