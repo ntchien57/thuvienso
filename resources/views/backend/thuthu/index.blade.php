@@ -6,8 +6,11 @@ Quản Trị - Thủ Thư
 Danh Sách Thủ Thư
 @endsection
 @section('content')
-<a href="{{ url('admin/thuthu/create') }}" class="btn btn-primary">Thêm mới</a>
-<a href="{{ url('admin/thuthu/print') }}" class="btn btn-success">In Danh Sách</a>
+<div class="mb-2 text-right">
+
+    <a href="{{ url('admin/thuthu/print') }}" class="btn btn-success">In Danh Sách</a>
+    <a href="{{ url('admin/thuthu/create') }}" class="btn btn-primary">Thêm mới +</a>
+</div>
 <table class="table table-bordered table-hover table-responsive">
     <thead>
         <tr class="table-success" >

@@ -15,14 +15,13 @@
                     </ul>
                 </div>
             </div>
-            <div style="float:right;height: 32px;position: absolute;right: 1px;top: 5px;" class="d-flex">
+            <div style="float:right;height: 32px;position: absolute;right: 150px;top: 5px;" class="d-flex">
                 <a class="text-dark mr-5" style="font-weight: bold;" href="{{ route('home')}}">Trang chủ</a>
                 <a class="text-dark mr-5" style="font-weight: bold;" href="{{route('likeList')}}">Sách yêu thích</a>
-                <a class="text-dark mr-5" style="font-weight: bold;" href="">Đặt mượn sách</a>
-                <a class="text-dark mr-5" style="font-weight: bold;" href="">Lịch sử mượn sách</a>
+                <a class="text-dark mr-5" style="font-weight: bold;" href="{{ route('borrowHistory')}}">Lịch sử mượn sách</a>
                 <div>
                     <span><i class="fa fa-phone-square" aria-hidden="true"></i>
-                </span><b>Hotline:<span style="font-weight: bold;color:#0052CC;"> 0243.3323.6714</span></b>
+                    </span><b>Hotline:<span style="font-weight: bold;color:#0052CC;"> 0243.3323.6714</span></b>
                 </div>
                 
             </div>

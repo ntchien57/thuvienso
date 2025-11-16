@@ -34,6 +34,11 @@ Route::group(['prefix' => 'user'], function () {
     Route::match(['get', 'post'], '/profile', 'UserController@profile')->name('userProfile');
     Route::get('/like/{id}', 'UserController@like')->name('like');
     Route::get('/like-list', 'UserController@likeList')->name('likeList');
+    Route::post('/muon-sach', 'UserController@muonSach')->name('muonSach');
+    Route::get('/lich-su-muon-sach', 'UserController@borrowHistory')->name('borrowHistory');
+    Route::post('muon-sach/gia-han/{id}', 'UserController@extendBorrow')
+        ->name('borrowExtend');
+    Route::post('/review/{id}', 'UserController@postReview')->name('userReview');
 });
 
 

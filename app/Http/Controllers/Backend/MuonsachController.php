@@ -85,7 +85,7 @@ EOT; //chuỗi có xuống dòng
         $muonsach->docgia_id       = $request->docgia_id;
         $muonsach->sach_id       = $request->sach_id;
         $muonsach->save();
-        return redirect()->to('admin/muonsach');
+        return redirect()->back()->with('message','Mượn sách thành công');
     }
 
     /**
@@ -163,7 +163,7 @@ EOT; //chuỗi có xuống dòng
         $muonsach= Qltv_Muonsach::find($id);
         $muonsach->delete();
 
-        return redirect()->route('backend.muonsach.index');
+        return redirect()->back();
     }
     public function print()
     {

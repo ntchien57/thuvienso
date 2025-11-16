@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Qltv_Docgia;
-use App\Qltv_Nganh;
-use App\Qltv_Khoa;
 use App\Like;
+use App\Qltv_Khoa;
+use Carbon\Carbon;
+use App\Qltv_Nganh;
+use App\Qltv_Docgia;
 use App\Qltv_Theloai;
+use App\Qltv_Muonsach;
+use App\Comment;
+use App\Mail\BorrowBookMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
@@ -227,6 +232,206 @@ class UserController extends Controller
             ->select('qltv_sach.*', 'yeuthich.id as like_id')
             ->get();
 
-        return view('user.like_list', compact('likes','theloai'));
+        return view('user.like_list', compact('likes', 'theloai'));
+    }
+
+    public function muonSach(Request $request)
+    {
+        // 1. Kiểm tra đăng nhập
+        if (!session()->has('user_id')) {
+            return redirect()->route('userLogin')->with('error', 'Vui lòng đăng nhập để mượn sách');
+        }
+
+        $userId = session('user_id');
+        $userEmail = session('user_email');
+
+        // 2. Kiểm tra xem sách đã được mượn bởi user chưa
+        $check = Qltv_Muonsach::where('docgia_id', $userId)
+            ->where('sach_id', $request->sach_id)
+            ->where('tinhtrang', '0')   // 0 = đang mượn
+            ->first();
+
+        if ($check) {
+            return back()->with('error', 'Bạn đã mượn sách này rồi, không thể mượn trùng.');
+        }
+
+        // 3. Tạo phiếu mượn
+        $dt = Carbon::now('Asia/Ho_Chi_Minh');
+
+        $muonsach = new Qltv_Muonsach();
+        $muonsach->mamuon     = 'MM_' . time();
+        $muonsach->soluong    = 1;
+        $muonsach->ngaymuon   = $dt->toDateTimeString();
+        $muonsach->hantra     = $request->hantra;
+        $muonsach->ngaytra    = $dt->copy()->addDays($request->hantra);
+        $muonsach->tinhtrang  = '0';           // đang mượn
+        $muonsach->thuthu_id  = 1;
+        $muonsach->docgia_id  = $userId;
+        $muonsach->sach_id    = $request->sach_id;
+        $muonsach->save();
+
+        // Lấy thông tin sách để đưa vào email
+        $sach = \App\Qltv_Sach::find($request->sach_id);
+
+        // Gửi email
+        if ($userEmail) {
+            Mail::to($userEmail)->send(new BorrowBookMail($sach, $muonsach->ngaytra));
+        }
+
+        return redirect()->back()->with('message', 'Mượn sách thành công');
+    }
+
+    public function borrowHistory(Request $request)
+    {
+        // 1. Kiểm tra đăng nhập
+        if (!$request->session()->has('user_id')) {
+            return redirect()->route('userLogin')->with('error', 'Vui lòng đăng nhập để xem lịch sử mượn.');
+        }
+
+        $userId = $request->session()->get('user_id');
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+
+        // 2. Lấy danh sách mượn đang active (tinhtrang = 0). 
+        // Thử dùng relation 'sach' nếu model Qltv_Muonsach đã định nghĩa.
+        $borrows = Qltv_Muonsach::where('docgia_id', $userId)
+            ->with(['sach']) // nếu relation tồn tại: public function sach() { return $this->belongsTo(Qltv_Sach::class,'sach_id'); }
+            ->orderBy('ngaymuon', 'desc')
+            ->paginate(10);
+
+        // 3. Nếu relation 'sach' không tồn tại (an toàn): fallback join
+        if ($borrows->isEmpty() && Qltv_Muonsach::where('docgia_id', $userId)->exists()) {
+            // fallback: join lấy thông tin sách
+            $borrows = Qltv_Muonsach::where('docgia_id', $userId)
+                ->join('qltv_sach', 'qltv_muonsach.sach_id', '=', 'qltv_sach.id')
+                ->select('qltv_muonsach.*', 'qltv_sach.tensach', 'qltv_sach.anh')
+                ->orderBy('ngaymuon', 'desc')
+                ->paginate(10);
+        }
+
+        // 4. Thêm trường tính toán (days_left, is_overdue) cho mỗi item
+        $borrows->getCollection()->transform(function ($item) use ($now) {
+            // Access ngaytra từ model; nếu đã join thì ngaytra ở item->ngaytra
+            $ngaytra = isset($item->ngaytra) ? Carbon::parse($item->ngaytra) : null;
+            if ($ngaytra) {
+                if ($now->lte($ngaytra)) {
+                    $daysLeft = $now->diffInDays($ngaytra);
+                    $isOverdue = false;
+                } else {
+                    $daysLeft = $now->diffInDays($ngaytra);
+                    $isOverdue = true;
+                }
+            } else {
+                $daysLeft = null;
+                $isOverdue = false;
+            }
+
+            // gán thêm (màu hiển thị có thể dùng trong view)
+            $item->days_left = $daysLeft;
+            $item->is_overdue = $isOverdue;
+
+            // nếu relation sach tồn tại, đảm bảo có các thuộc tính tensach, anh
+            if (isset($item->sach) && $item->sach) {
+                $item->tensach = $item->sach->tensach ?? ($item->tensach ?? '');
+                $item->anh     = $item->sach->anh ?? ($item->anh ?? null);
+            }
+
+            return $item;
+        });
+
+        return view('user.borrow_history', compact('borrows'));
+    }
+
+    public function extendBorrow(Request $request, $id)
+    {
+        // 1. Kiểm tra đăng nhập
+        if (!$request->session()->has('user_id')) {
+            return redirect()->route('userLogin')->with('error', 'Vui lòng đăng nhập để thực hiện thao tác này.');
+        }
+
+        $userId = $request->session()->get('user_id');
+
+        // 2. Lấy phiếu mượn của user (chỉ lấy các phiếu đang mượn)
+        $muon = Qltv_Muonsach::where('id', $id)
+            ->where('docgia_id', $userId)
+            ->where('tinhtrang', '0') // 0 = đang mượn
+            ->first();
+
+        if (!$muon) {
+            return back()->with('error', 'Không tìm thấy phiếu mượn hợp lệ.');
+        }
+
+        // 3. Kiểm tra hạn hiện tại
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $ngaytra = Carbon::parse($muon->ngaytra);
+
+        if ($now->gt($ngaytra)) {
+            return back()->with('error', 'Không thể gia hạn — sách đã quá hạn trả.');
+        }
+
+        // 4. Nhận số ngày gửi từ form
+        $days = intval($request->days);
+
+        if ($days <= 0) {
+            return back()->with('error', 'Số ngày gia hạn không hợp lệ.');
+        }
+
+        // 5. Nếu có giới hạn số lần gia hạn (tùy DB có cột giahan_count)
+        $maxExtensions = 2;
+
+        if (array_key_exists('giahan_count', $muon->getAttributes())) {
+            $current = intval($muon->giahan_count ?? 0);
+
+            if ($current >= $maxExtensions) {
+                return back()->with('error', "Bạn đã đạt giới hạn {$maxExtensions} lần gia hạn.");
+            }
+
+            $muon->giahan_count = $current + 1;
+        }
+
+        // 6. Cập nhật hạn trả mới
+        $muon->ngaytra = $ngaytra->addDays($days)->format('Y-m-d H:i:s');
+        $muon->save();
+
+        return back()->with(
+            'message',
+            "Gia hạn thành công thêm {$days} ngày. Hạn trả mới: " . Carbon::parse($muon->ngaytra)->format('d/m/Y')
+        );
+    }
+
+    public function postReview(Request $request, $sachId)
+    {
+        // kiểm tra đăng nhập
+        if (!session()->has('user_id')) {
+            return redirect()->route('userLogin')->with('error', 'Vui lòng đăng nhập để đánh giá');
+        }
+
+        $userId = session('user_id');
+
+        // validate
+        $data = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'content' => 'nullable|string|max:1000',
+        ]);
+
+        // Kiểm tra nếu muốn: không cho đánh giá trùng (1 user chỉ 1 review / sách)
+        $exists = Comment::where('user_id', $userId)->where('sach_id', $sachId)->first();
+        if ($exists) {
+            // cập nhật lại nếu muốn
+            $exists->rating = $data['rating'];
+            $exists->content = $data['content'] ?? $exists->content;
+            $exists->save();
+            return back()->with('message', 'Bạn đã cập nhật đánh giá thành công.');
+        }
+
+        // Lưu mới
+        Comment::create([
+            'user_id' => $userId,
+            'sach_id' => $sachId,
+            'rating'  => $data['rating'],
+            'content' => $data['content'] ?? null,
+            // 'created_at' nếu cần (model timestamps)
+        ]);
+
+        return back()->with('message', 'Cảm ơn bạn đã đánh giá sách!');
     }
 }

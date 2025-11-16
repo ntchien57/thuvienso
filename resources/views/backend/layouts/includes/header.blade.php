@@ -1,5 +1,5 @@
 
-<nav class="navbar navbar-expand navbar-light bg-primary topbar mb-4 static-top shadow">
+<nav class="navbar navbar-expand navbar-light bg-light topbar mb-4 static-top shadow">
  
 
 <a class="navbar-brand mr-1" href="index.html"></a>

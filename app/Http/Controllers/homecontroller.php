@@ -7,6 +7,7 @@ use App\slide as slides;
 use DB;
 use App\khachhang as khachhang;
 use App\chitietsach;
+use App\Comment;
 use App\danhmuc as danhmuc;
 use App\Qltv_Theloai as theloai;
 use App\Qltv_Nxb as nhaxuatban;
@@ -58,6 +59,7 @@ class homecontroller extends Controller
         $sach = qlsach::find($id);
         $nxbs = qlsach::find($sach->nxb_id);
         $theloai = theloai::paginate(12);
+        $reviews = Comment::where('sach_id', $id)->orderBy('id','desc')->get();
         $chitietsanpham = chitietsach::where('masach', $id)->get();
         $sachCungTacGia = qlsach::where('nxb_id', $sach->nxb_id)
             ->where('id', '!=', $sach->id)
@@ -75,7 +77,8 @@ class homecontroller extends Controller
             'chitietsanpham',
             'theloai',
             'sachCungTacGia',
-            'sachCungTheLoai'
+            'sachCungTheLoai',
+            'reviews'
         ));
     }
 

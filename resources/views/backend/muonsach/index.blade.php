@@ -9,8 +9,11 @@ Danh Sách Mượn Sách
 @endsection
 
 @section('content')
-<a href="{{ url('admin/muonsach/create') }}" class="btn btn-primary">Thêm mới</a>
-<a href="{{ url('admin/muonsach/print') }}" class="btn btn-success">In danh sách</a>
+<div class="mb-2 text-right">
+
+    <a href="{{ url('admin/muonsach/print') }}" class="btn btn-success">In danh sách</a>
+    <a href="{{ url('admin/muonsach/create') }}" class="btn btn-primary">Thêm mới +</a>
+</div>
 <table class="table table-bordered table-striped table-responsive">
     <thead>
         <tr>

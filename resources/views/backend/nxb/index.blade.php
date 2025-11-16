@@ -6,8 +6,11 @@ Quản Trị - Nhà Xuất Bản
 Danh Sách Nhà Xuất Bản
 @endsection
 @section('content')
-<a class="btn btn-primary" href="{{ url('admin/nxb/create') }}" >Thêm Mới</a>
-<a href="{{ url('admin/nxb/print') }}" class="btn btn-success">In danh sách</a>
+<div class="mb-2 text-right">
+    <a href="{{ url('admin/nxb/print') }}" class="btn btn-success">In danh sách</a>
+    <a class="btn btn-primary" href="{{ url('admin/nxb/create') }}" >Thêm Mới +</a>
+
+</div>
 <table class="table table-bordered table-hover">
     <thead>
         <tr class="table-success" style="text-align: center;">

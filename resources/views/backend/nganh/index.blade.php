@@ -6,8 +6,11 @@ Quản Trị - Ngành Học
 Danh Sách Ngành Học
 @endsection
 @section('content')
-<a href="{{ url('admin/nganh/create') }}" class="btn btn-primary">Thêm mới</a>
-<a href="{{ url('admin/nganh/print') }}" class="btn btn-success">In Danh Sách</a>
+<div class="mb-2 text-right">
+
+    <a href="{{ url('admin/nganh/print') }}" class="btn btn-success">In Danh Sách</a>
+    <a href="{{ url('admin/nganh/create') }}" class="btn btn-primary">Thêm mới +</a>
+</div>
 <table class="table table-bordered table-hover">
     <thead>
         <tr class="table-success" >

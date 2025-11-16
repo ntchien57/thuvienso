@@ -54,8 +54,8 @@
 @section('content')
     <div id="container">
         <div class="sortable" id="layoutGroup1">
-            <div class="product_view_contener">
-                <div class="showleft">
+            <div class="product_view_contener row">
+                <div class="showleft col-md-8">
                     <div class="image_contenner">
                         <div class="mainimage">
                             <img src="{{ asset('storage/uploads') . '/' . $sach->anh }}" id="mainimage" width="250" />
@@ -75,20 +75,65 @@
                                 <span>Tác thể loại: {{ $sach->theloai->tentheloai }}</span>
                             </div>
                         </div>
-                        <div class="groups mb-5">
+                        <div class="groups">
                             <div class="viewfields">
                                 <span>Nhà xuất bản: {{ $sach->nxb->tennxb }}</a></span>
                             </div>
                         </div>
-                        <div class="groups d-flex mt-5">
-                                <a href="{{ route('like',$sach->id)}}" class="btn btn-warning mr-4"><i class="fa fa-heart" aria-hidden="true"></i>
-  Yêu thích</a>                         
-                            <a href="" class="btn btn-success"><i class="fa fa-shopping-cart" aria-hidden="true"></i>
-    Đặt mượn sách</a>
-                        </div>
+                        <form action="{{ route('muonSach') }}" method="POST">
+                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                            <div class="form-group w-25">
+                                <label style="font-weight: bold" for="hantra">Số ngày mượn</label>
+                                <input type="number" min="1" class="form-control" id="hantra"
+                                    placeholder="Nhập số ngày" name="hantra" value="1">
+                                <input type="hidden" name="sach_id" value="{{ $sach->id }}">
+                            </div>
+                            <div class="groups d-flex mt-5">
+                                <a href="{{ route('like', $sach->id) }}" class="btn btn-warning mr-4"><i
+                                        class="fa fa-heart" aria-hidden="true"></i>
+                                    Yêu thích</a>
+                                <button type="submit" class="btn btn-success"><i class="fa fa-shopping-cart"
+                                        aria-hidden="true"></i>
+                                    Đặt mượn sách</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <div class="clear" style="clear: both;"></div>
+                <div class="col-md-4">
+
+                    <h5 class="mb-3">📌 Danh sách đánh giá</h5>
+
+                    <div class="review-box p-3"
+                        style="max-height: 400px; overflow-y: auto; background: #fafafa; border-radius: 8px; border: 1px solid #ddd;">
+
+                        @forelse ($reviews as $r)
+                            <div class="review-item p-2 mb-3"
+                                style="background: white; border-radius: 6px; border: 1px solid #e3e3e3;">
+
+                                <strong>{{ $r->user->tendocgia ?? 'Người dùng' }}</strong>
+
+                                <div class="text-warning mb-1">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= $r->rating)
+                                            <i class="fa fa-star"></i>
+                                        @else
+                                            <i class="fa fa-star-o"></i>
+                                        @endif
+                                    @endfor
+                                </div>
+
+                                <p class="mb-0" style="font-size: 14px; color: #444;">
+                                    {{ $r->content }}
+                                </p>
+                            </div>
+                        @empty
+                            <p class="text-muted">Chưa có đánh giá nào.</p>
+                        @endforelse
+
+                    </div>
+
+                </div>
+
             </div>
 
             <div class="block" id="module_ProductDetail">
@@ -161,8 +206,8 @@
 
             </div>
             <div id="content" class="block">
-                <h2 class="title_pd"><a href="" class="title">Sách cùng thể loại </a><span class="css"></span><a
-                        href="" class="more"></a></h2>
+                <h2 class="title_pd"><a href="" class="title">Sách cùng thể loại </a><span
+                        class="css"></span><a href="" class="more"></a></h2>
                 <div class="list_pd">
                     @foreach ($sachCungTheLoai as $sach)
                         @if ($sach)
