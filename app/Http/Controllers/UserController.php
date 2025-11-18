@@ -294,6 +294,7 @@ class UserController extends Controller
         // 2. Lấy danh sách mượn đang active (tinhtrang = 0). 
         // Thử dùng relation 'sach' nếu model Qltv_Muonsach đã định nghĩa.
         $borrows = Qltv_Muonsach::where('docgia_id', $userId)
+            ->where('tinhtrang',0)
             ->with(['sach']) // nếu relation tồn tại: public function sach() { return $this->belongsTo(Qltv_Sach::class,'sach_id'); }
             ->orderBy('ngaymuon', 'desc')
             ->paginate(10);
@@ -302,6 +303,7 @@ class UserController extends Controller
         if ($borrows->isEmpty() && Qltv_Muonsach::where('docgia_id', $userId)->exists()) {
             // fallback: join lấy thông tin sách
             $borrows = Qltv_Muonsach::where('docgia_id', $userId)
+                ->where('tinhtrang',0)
                 ->join('qltv_sach', 'qltv_muonsach.sach_id', '=', 'qltv_sach.id')
                 ->select('qltv_muonsach.*', 'qltv_sach.tensach', 'qltv_sach.anh')
                 ->orderBy('ngaymuon', 'desc')
